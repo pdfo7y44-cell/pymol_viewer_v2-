@@ -11,10 +11,13 @@ import traceback
 # クラウド環境ではGUIが使えないため、ヘッドレスモード用の設定
 os.environ['TCL_LIBRARY'] = '/usr/share/tcltk/tcl8.6'
 os.environ['TK_LIBRARY'] = '/usr/share/tcltk/tk8.6'
+os.environ['PYMOL_NO_GUI'] = '1'
 
 try:
-    import pymol2
-    from pymol import util
+    import pymol
+    from pymol import cmd, util
+    # ヘッドレス（画面なし）モードでPyMOLを起動
+    pymol.finish_launching(['pymol', '-cq'])
     PYMOL_AVAILABLE = True
     error_detail = ""
 except Exception as e:
@@ -39,7 +42,6 @@ st.set_page_config(page_title="PyMOL Viewer Online", page_icon="🧬", layout="w
 st.title("PyMOL Viewer Online")
 st.write("ChemDraw等から出力したSDFファイルをアップロードして、3D構造や自転GIFを生成します。")
 
-# ここが変更点！エラーの詳細を画面に表示させます
 if not PYMOL_AVAILABLE:
     st.error("PyMOLの読み込みに失敗しました。以下の詳細なエラー文を教えてください！")
     st.code(error_detail)
@@ -126,8 +128,9 @@ if st.button("単体画像を生成", type="primary", key="tab3_btn"):
             tmp_sdf.write(uploaded_single.getvalue())
 
         try:
-            with st.spinner("PyMOLでレンダリング中..."), pymol2.PyMOL() as p:
-                c = p.cmd
+            with st.spinner("PyMOLでレンダリング中..."):
+                c = pymol.cmd
+                c.reinitialize() # 念のため前の描画データをリセット
                 c.load(tmp_single_path, "single_ligand")
                 c.bg_color("white")
                 
