@@ -6,6 +6,7 @@ import shutil
 import tempfile
 import streamlit as st
 import glob
+import traceback
 
 # クラウド環境ではGUIが使えないため、ヘッドレスモード用の設定
 os.environ['TCL_LIBRARY'] = '/usr/share/tcltk/tcl8.6'
@@ -15,8 +16,10 @@ try:
     import pymol2
     from pymol import util
     PYMOL_AVAILABLE = True
-except ImportError:
+    error_detail = ""
+except Exception as e:
     PYMOL_AVAILABLE = False
+    error_detail = traceback.format_exc()
 
 try:
     from PIL import Image
@@ -36,8 +39,10 @@ st.set_page_config(page_title="PyMOL Viewer Online", page_icon="🧬", layout="w
 st.title("PyMOL Viewer Online")
 st.write("ChemDraw等から出力したSDFファイルをアップロードして、3D構造や自転GIFを生成します。")
 
+# ここが変更点！エラーの詳細を画面に表示させます
 if not PYMOL_AVAILABLE:
-    st.error("PyMOL (pymol2) が環境にインストールされていません。")
+    st.error("PyMOLの読み込みに失敗しました。以下の詳細なエラー文を教えてください！")
+    st.code(error_detail)
     st.stop()
 
 # --- セッション状態の初期化 ---
@@ -111,7 +116,6 @@ with col_t3_2:
 
 if st.button("単体画像を生成", type="primary", key="tab3_btn"):
     if uploaded_single:
-        # スタイルが変更されたら画像をクリア
         if style_tab3 != st.session_state.current_style:
             st.session_state.current_style = style_tab3
             for key in ["t3_img", "t3_angles", "t3_gif"]:
@@ -127,10 +131,8 @@ if st.button("単体画像を生成", type="primary", key="tab3_btn"):
                 c.load(tmp_single_path, "single_ligand")
                 c.bg_color("white")
                 
-                # ヘッドレスモードでの描画安定化
                 c.set("display_mode", 1) 
                 
-                # スタイル条件分岐
                 lig_style = "spheres" if "空間充填" in style_tab3 else "sticks"
                 c.show_as(lig_style, "single_ligand")
                 c.color("brightorange", "single_ligand")
