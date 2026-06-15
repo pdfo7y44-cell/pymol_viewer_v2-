@@ -5,7 +5,3 @@ channels:
 dependencies:
   - python=3.9
   - pymol-open-source
-  - pip
-  - pip:
-    - streamlit
-    - pillow
