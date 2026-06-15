@@ -1,8 +1,8 @@
 name: pymol-online
 channels:
   - conda-forge
-  - nodefaults
 dependencies:
   - python=3.9
   - pymol-open-source
-# 強制リセット
+  - streamlit
+  - pillow
